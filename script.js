@@ -236,6 +236,25 @@ function getTimeSeriesSlice(stock, days) {
 // Render the cards and charts
 function renderDashboard() {
   const container = document.getElementById('dashboard');
+  // Compute a global y‑axis range across all stocks for the current time frame.
+  const allPrices = [];
+  stocks.forEach(stock => {
+    const slice = getTimeSeriesSlice(stock, currentTimeframe);
+    allPrices.push(...slice.prices);
+  });
+  // If there are prices available, calculate global min/max with padding.  This
+  // ensures all individual charts share the same vertical scale, improving
+  // visual consistency and comparability across cards.  A small ±5% padding
+  // prevents lines from touching the chart boundaries.
+  let globalMin = 0;
+  let globalMax = 0;
+  if (allPrices.length > 0) {
+    globalMin = Math.min(...allPrices);
+    globalMax = Math.max(...allPrices);
+  }
+  const globalYMin = globalMin * 0.95;
+  const globalYMax = globalMax * 1.05;
+
   stocks.forEach(stock => {
     // Determine current time slice
     const tsSlice = getTimeSeriesSlice(stock, currentTimeframe);
@@ -299,21 +318,16 @@ function renderDashboard() {
       mode: 'lines',
       line: { color: '#2a3f69' }
     };
-    // Compute a dynamic y‑axis range for each chart so that the line occupies
-    // the full vertical space.  A small padding of ±5% is added to ensure
-    // the chart does not touch the top or bottom edges.  This improves
-    // consistency and readability across different price ranges.
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
-    const yMin = minPrice * 0.95;
-    const yMax = maxPrice * 1.05;
+    // Use the global y‑axis range computed above to align scales across
+    // all charts.  This makes the vertical axis consistent for every stock
+    // within the current timeframe.
     const layout = {
       margin: { t: 10, b: 30, l: 40, r: 10 },
       xaxis: { title: 'التاريخ', tickfont: { size: 8 } },
       yaxis: {
         title: 'السعر (درهم)',
         tickfont: { size: 8 },
-        range: [yMin, yMax]
+        range: [globalYMin, globalYMax]
       },
       font: { family: 'Arial', size: 10 },
       showlegend: false
