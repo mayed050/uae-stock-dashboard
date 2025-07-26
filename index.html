@@ -31,6 +31,12 @@
   <header>
     <h1>لوحة معلومات الأسهم</h1>
     <p class="subtitle">تحليل وتوقعات لأسهم أسواق دبي وأبوظبي المالية</p>
+    <!-- إطار لاختيار فترة العرض الزمنية -->
+    <div id="controls" class="controls">
+      <label><input type="radio" name="timeframe" value="7"> أسبوع</label>
+      <label><input type="radio" name="timeframe" value="30" checked> شهر</label>
+      <label><input type="radio" name="timeframe" value="90"> ثلاثة أشهر</label>
+    </div>
   </header>
 
   <main id="dashboard">
@@ -40,6 +46,12 @@
   <section id="summary" class="summary">
     <h2>ملخص التحليل والتوصيات</h2>
     <div id="summary-content"></div>
+  </section>
+
+  <!-- قسم للمقارنة بين أداء الأسهم المختلفة -->
+  <section id="comparison-section" class="comparison">
+    <h2>مقارنة الأداء</h2>
+    <div id="comparison-chart"></div>
   </section>
 
   <footer>

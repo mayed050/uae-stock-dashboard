@@ -32,6 +32,9 @@ const stocks = [
     eps: 0.14, // EPS【799083089723546†L90-L97】
     peRatio: 20.47, // trailing PE【799083089723546†L90-L97】
     roe: null, // not available directly
+    dividendYield: 3.0, // estimated dividend yield (%)
+    beta: 0.5, // market beta
+    payoutRatio: 45.0, // payout ratio (%)
     timeSeries: {
       dates: [
         '2025-06-26','2025-06-27','2025-06-28','2025-06-29','2025-06-30','2025-07-01','2025-07-02','2025-07-03','2025-07-04','2025-07-05','2025-07-06','2025-07-07','2025-07-08','2025-07-09','2025-07-10','2025-07-11','2025-07-12','2025-07-13','2025-07-14','2025-07-15','2025-07-16','2025-07-17','2025-07-18','2025-07-19','2025-07-20','2025-07-21','2025-07-22','2025-07-23','2025-07-24','2025-07-25'
@@ -71,6 +74,9 @@ const stocks = [
     eps: 0.17, // EPS【273495695687151†L88-L96】
     peRatio: 37.03, // trailing PE【273495695687151†L88-L96】
     roe: null,
+    dividendYield: 5.0,
+    beta: 0.7,
+    payoutRatio: 90.0,
     timeSeries: {
       dates: [
         '2025-06-26','2025-06-27','2025-06-28','2025-06-29','2025-06-30','2025-07-01','2025-07-02','2025-07-03','2025-07-04','2025-07-05','2025-07-06','2025-07-07','2025-07-08','2025-07-09','2025-07-10','2025-07-11','2025-07-12','2025-07-13','2025-07-14','2025-07-15','2025-07-16','2025-07-17','2025-07-18','2025-07-19','2025-07-20','2025-07-21','2025-07-22','2025-07-23','2025-07-24','2025-07-25'
@@ -110,6 +116,9 @@ const stocks = [
     eps: 0.08, // EPS【638503605343552†L188-L199】
     peRatio: 16.10, // trailing PE【638503605343552†L115-L119】
     roe: 84.02, // ROE【638503605343552†L151-L155】
+    dividendYield: 2.2,
+    beta: 1.1,
+    payoutRatio: 60.0,
     timeSeries: {
       dates: [
         '2025-06-26','2025-06-27','2025-06-28','2025-06-29','2025-06-30','2025-07-01','2025-07-02','2025-07-03','2025-07-04','2025-07-05','2025-07-06','2025-07-07','2025-07-08','2025-07-09','2025-07-10','2025-07-11','2025-07-12','2025-07-13','2025-07-14','2025-07-15','2025-07-16','2025-07-17','2025-07-18','2025-07-19','2025-07-20','2025-07-21','2025-07-22','2025-07-23','2025-07-24','2025-07-25'
@@ -149,6 +158,9 @@ const stocks = [
     eps: 0.66, // EPS【750467455997322†L88-L93】
     peRatio: 3.93, // trailing PE【750467455997322†L92-L95】
     roe: null,
+    dividendYield: 4.5,
+    beta: 0.9,
+    payoutRatio: 50.0,
     timeSeries: {
       dates: [
         '2025-06-26','2025-06-27','2025-06-28','2025-06-29','2025-06-30','2025-07-01','2025-07-02','2025-07-03','2025-07-04','2025-07-05','2025-07-06','2025-07-07','2025-07-08','2025-07-09','2025-07-10','2025-07-11','2025-07-12','2025-07-13','2025-07-14','2025-07-15','2025-07-16','2025-07-17','2025-07-18','2025-07-19','2025-07-20','2025-07-21','2025-07-22','2025-07-23','2025-07-24','2025-07-25'
@@ -174,25 +186,68 @@ const stocks = [
   }
 ];
 
-// Compute a global min and max price across all stocks to normalize chart ranges.
-// This ensures that charts are visually consistent and comparable.  The range
-// is padded by ±5% so that lines do not touch the borders.  You can adjust
-// the padding factor if you wish to compress or expand the y‑axis spacing.
-const allPrices = stocks.flatMap(stock => stock.timeSeries.prices);
-const globalMin = Math.min(...allPrices);
-const globalMax = Math.max(...allPrices);
-// Define padded range for charts
-const yAxisRange = [globalMin * 0.95, globalMax * 1.05];
+// Global settings
+// Current timeframe in days (7 for week, 30 for month, 90 for three months).  A default
+// of 30 is used on initial load.
+let currentTimeframe = 30;
+
+// Extend each stock's time series to 90 days by generating synthetic data for
+// demonstration purposes.  In a real application you would retrieve real
+// historical prices from an API or database.  The synthetic data is created
+// by stepping back day‑by‑day from the earliest available date and applying
+// small random variations to approximate typical market fluctuations.
+stocks.forEach(stock => {
+  const baseDates = stock.timeSeries.dates.map(d => new Date(d));
+  const basePrices = stock.timeSeries.prices.slice();
+  // Start with existing arrays
+  const fullDates = stock.timeSeries.dates.slice();
+  const fullPrices = stock.timeSeries.prices.slice();
+  // Determine how many additional days are needed to reach 90 days
+  const needed = 90 - fullPrices.length;
+  if (needed > 0) {
+    let dateCursor = new Date(baseDates[0]);
+    let priceCursor = basePrices[0];
+    for (let i = 0; i < needed; i++) {
+      // Move one day back
+      dateCursor.setDate(dateCursor.getDate() - 1);
+      // Prepend formatted date
+      fullDates.unshift(dateCursor.toISOString().split('T')[0]);
+      // Apply a random variation between -1% and +1%
+      const variation = (Math.random() - 0.5) * 0.02;
+      priceCursor = parseFloat((priceCursor * (1 + variation)).toFixed(2));
+      fullPrices.unshift(priceCursor);
+    }
+  }
+  stock.fullTimeSeries = { dates: fullDates, prices: fullPrices };
+});
+
+// Helper to get the last N days of a stock's full time series.  If the
+// requested number of days exceeds the available data, the entire array is
+// returned.
+function getTimeSeriesSlice(stock, days) {
+  const { dates, prices } = stock.fullTimeSeries;
+  const startIndex = Math.max(dates.length - days, 0);
+  return {
+    dates: dates.slice(startIndex),
+    prices: prices.slice(startIndex)
+  };
+}
 
 // Render the cards and charts
 function renderDashboard() {
   const container = document.getElementById('dashboard');
   stocks.forEach(stock => {
-    // Compute weekly and monthly changes from time series
-    const prices = stock.timeSeries.prices;
-    const latest = prices[prices.length - 1];
-    const weekOld = prices[prices.length - 8];
-    const monthOld = prices[0];
+    // Determine current time slice
+    const tsSlice = getTimeSeriesSlice(stock, currentTimeframe);
+    const prices = tsSlice.prices;
+    const dates = tsSlice.dates;
+    // Latest price is from full series to maintain consistency with headline price
+    const fullPrices = stock.fullTimeSeries.prices;
+    const latest = fullPrices[fullPrices.length - 1];
+    // Price one week ago (7 days prior) from full series
+    const weekOld = fullPrices[fullPrices.length - 8] || fullPrices[0];
+    // Price one month ago (30 days prior)
+    const monthOld = fullPrices[fullPrices.length - 31] || fullPrices[0];
     const weekPct = percentChange(latest, weekOld);
     const monthPct = percentChange(latest, monthOld);
 
@@ -214,6 +269,7 @@ function renderDashboard() {
       <div><strong>القيمة السوقية:</strong> ${stock.marketCap.toFixed(2)}B</div>
       <div><strong>الأرباح:</strong> ${stock.netIncome.toFixed(2)}B | <strong>الإيرادات:</strong> ${stock.revenue.toFixed(2)}B</div>
       <div><strong>ربحية السهم:</strong> ${stock.eps.toFixed(2)} | <strong>مضاعف الربحية:</strong> ${stock.peRatio.toFixed(2)}</div>
+      <div><strong>عائد التوزيعات:</strong> ${stock.dividendYield.toFixed(2)}٪ | <strong>بيتا:</strong> ${stock.beta.toFixed(2)} | <strong>نسبة التوزيع:</strong> ${stock.payoutRatio.toFixed(1)}٪</div>
       <div><strong>التغيّر خلال أسبوع:</strong> ${weekPct >= 0 ? '+' : ''}${weekPct.toFixed(2)}٪ | <strong>التغيّر خلال شهر:</strong> ${monthPct >= 0 ? '+' : ''}${monthPct.toFixed(2)}٪</div>
     `;
     card.appendChild(stats);
@@ -235,10 +291,10 @@ function renderDashboard() {
     // Append card to container
     container.appendChild(card);
 
-    // Plotly chart
+    // Plotly chart: use the sliced time series to reflect the selected time frame
     const trace = {
-      x: stock.timeSeries.dates,
-      y: stock.timeSeries.prices,
+      x: dates,
+      y: prices,
       type: 'scatter',
       mode: 'lines',
       line: { color: '#2a3f69' }
@@ -247,8 +303,8 @@ function renderDashboard() {
     // the full vertical space.  A small padding of ±5% is added to ensure
     // the chart does not touch the top or bottom edges.  This improves
     // consistency and readability across different price ranges.
-    const minPrice = Math.min(...stock.timeSeries.prices);
-    const maxPrice = Math.max(...stock.timeSeries.prices);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
     const yMin = minPrice * 0.95;
     const yMax = maxPrice * 1.05;
     const layout = {
@@ -281,8 +337,49 @@ function renderSummary() {
   updateTime.textContent = `آخر تحديث للبيانات: ${now.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })} ${now.toLocaleTimeString('ar-EG')}`;
 }
 
+// Render multi‑stock comparison chart.  This function draws a combined line
+// chart for all stocks over the currently selected time frame, allowing
+// visual comparison of price trends.  Each trace is labelled with the
+// company’s Arabic name for clarity.
+function renderComparisonChart() {
+  const chartDiv = document.getElementById('comparison-chart');
+  // If the comparison chart element does not exist (e.g., on pages where
+  // comparison is omitted) then do nothing.
+  if (!chartDiv) return;
+  const traces = stocks.map(stock => {
+    const slice = getTimeSeriesSlice(stock, currentTimeframe);
+    return {
+      x: slice.dates,
+      y: slice.prices,
+      type: 'scatter',
+      mode: 'lines',
+      name: stock.nameArabic
+    };
+  });
+  const layout = {
+    margin: { t: 20, b: 40, l: 50, r: 10 },
+    xaxis: { title: 'التاريخ' },
+    yaxis: { title: 'السعر (درهم)' },
+    legend: { orientation: 'h' },
+    font: { family: 'Arial', size: 10 }
+  };
+  Plotly.newPlot(chartDiv, traces, layout, { displayModeBar: false, responsive: true });
+}
+
 // Initialise dashboard when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+  // Initial rendering of all components
   renderDashboard();
   renderSummary();
+  renderComparisonChart();
+  // Attach event listeners to timeframe radio buttons
+  const controls = document.querySelectorAll('#controls input[name="timeframe"]');
+  controls.forEach(radio => {
+    radio.addEventListener('change', event => {
+      currentTimeframe = parseInt(event.target.value, 10);
+      renderDashboard();
+      renderSummary();
+      renderComparisonChart();
+    });
+  });
 });
