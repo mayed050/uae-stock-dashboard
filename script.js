@@ -243,14 +243,21 @@ function renderDashboard() {
       mode: 'lines',
       line: { color: '#2a3f69' }
     };
+    // Compute a dynamic y‑axis range for each chart so that the line occupies
+    // the full vertical space.  A small padding of ±5% is added to ensure
+    // the chart does not touch the top or bottom edges.  This improves
+    // consistency and readability across different price ranges.
+    const minPrice = Math.min(...stock.timeSeries.prices);
+    const maxPrice = Math.max(...stock.timeSeries.prices);
+    const yMin = minPrice * 0.95;
+    const yMax = maxPrice * 1.05;
     const layout = {
       margin: { t: 10, b: 30, l: 40, r: 10 },
       xaxis: { title: 'التاريخ', tickfont: { size: 8 } },
-      // Use the precomputed y‑axis range so all charts share the same scale.
       yaxis: {
         title: 'السعر (درهم)',
         tickfont: { size: 8 },
-        range: yAxisRange
+        range: [yMin, yMax]
       },
       font: { family: 'Arial', size: 10 },
       showlegend: false
