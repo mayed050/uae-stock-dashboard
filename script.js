@@ -174,6 +174,16 @@ const stocks = [
   }
 ];
 
+// Compute a global min and max price across all stocks to normalize chart ranges.
+// This ensures that charts are visually consistent and comparable.  The range
+// is padded by ±5% so that lines do not touch the borders.  You can adjust
+// the padding factor if you wish to compress or expand the y‑axis spacing.
+const allPrices = stocks.flatMap(stock => stock.timeSeries.prices);
+const globalMin = Math.min(...allPrices);
+const globalMax = Math.max(...allPrices);
+// Define padded range for charts
+const yAxisRange = [globalMin * 0.95, globalMax * 1.05];
+
 // Render the cards and charts
 function renderDashboard() {
   const container = document.getElementById('dashboard');
@@ -236,7 +246,12 @@ function renderDashboard() {
     const layout = {
       margin: { t: 10, b: 30, l: 40, r: 10 },
       xaxis: { title: 'التاريخ', tickfont: { size: 8 } },
-      yaxis: { title: 'السعر (درهم)', tickfont: { size: 8 } },
+      // Use the precomputed y‑axis range so all charts share the same scale.
+      yaxis: {
+        title: 'السعر (درهم)',
+        tickfont: { size: 8 },
+        range: yAxisRange
+      },
       font: { family: 'Arial', size: 10 },
       showlegend: false
     };
