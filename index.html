@@ -1,0 +1,54 @@
+<!--
+  Stock dashboard web page for tracking and analysing selected UAE equities.
+
+  The page is written in Modern Arabic and uses right‑to‑left direction.  It
+  displays a set of cards, one for each of the four requested companies
+  (DEWA, Salik, Talabat and NMDC).  Each card shows the latest price,
+  percentage change, key fundamental metrics as well as a small interactive
+  chart built with Plotly.  The summary section at the bottom explains
+  how the fair value was derived and provides a high level investment
+  recommendation.
+
+  To update the content automatically you can adjust the data contained in
+  the data object inside script.js or build a separate scheduler that
+  rewrites the JSON file used by this page.  Because network access from
+  the Python runtime is limited, the automatic update routine will need to
+  be executed in an environment capable of retrieving data from external
+  financial sources such as stockanalysis.com, Yahoo or an authorised
+  market data provider.
+-->
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة معلومات الأسهم</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Plotly library for interactive charts -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>لوحة معلومات الأسهم</h1>
+    <p class="subtitle">تحليل وتوقعات لأسهم أسواق دبي وأبوظبي المالية</p>
+  </header>
+
+  <main id="dashboard">
+    <!-- Cards will be injected by script.js -->
+  </main>
+
+  <section id="summary" class="summary">
+    <h2>ملخص التحليل والتوصيات</h2>
+    <div id="summary-content"></div>
+  </section>
+
+  <footer>
+    <p>جميع البيانات الظاهرة هنا معدة لأغراض إعلامية فقط ولا تشكل
+      توصية مباشرة للشراء أو البيع. يرجى مراجعة مصدر البيانات الرسمي قبل
+      اتخاذ أي قرار استثماري.</p>
+    <p id="update-time"></p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
